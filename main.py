@@ -1,4 +1,5 @@
 import logging, sqlite3, datetime, io
+import socket
 from config import Token
 
 from telegram import Update, ForceReply, message
@@ -6,6 +7,8 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 
 from tools import checkurl
 from nezha import NezhaDashboard
+
+socket.setdefaulttimeout(15)
 
 # Enable logging
 logging.basicConfig(
@@ -24,12 +27,12 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    update.message.reply_text('command: /checknezha')
+    update.message.reply_text('command: /checknezha url, like: /checknezha https://ops.naibahq.com/')
 
 
 def checknezha(update: Update, context: CallbackContext) -> None:
     if len(context.args) != 1:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="参数错误")
+        context.bot.send_message(chat_id=update.effective_chat.id, text="参数错误，必须为URL，例: /checknezha https://ops.naibahq.com/")
         return
     try:
         url, ws_url = checkurl(context.args[0])
@@ -55,7 +58,7 @@ def main() -> None:
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("checknezha", checknezha))
+    dispatcher.add_handler(CommandHandler("checknezha", checknezha, run_async=True))
 
     # on non command i.e message - echo the message on Telegram
     # dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))

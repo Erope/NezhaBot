@@ -1,8 +1,13 @@
 import re
+import socket
 import requests
 import websocket
-import time
 import json
+import pandas as pd
+import humanize
+from config import PermitTime
+
+socket.setdefaulttimeout(15)
 
 class NezhaDashboard:
     def __init__(self, url, ws_url):
@@ -30,7 +35,7 @@ class NezhaDashboard:
         except requests.exceptions.SSLError:
             raise BaseException("证书错误或其他原因导致SSLError")
         except:
-            raise BaseException("连接失败，请检查 {self.url} 是否可访问")
+            raise BaseException(f"连接失败，请检查 {self.url} 是否可访问")
         if html.status_code != requests.codes.ok:
             raise BaseException("非200响应，可能被防火墙拦截")
         self.html = html.text
@@ -56,13 +61,33 @@ class NezhaDashboard:
     def checkws(self):
         try:
             self.ws.connect(self.ws_url, timeout=10)
-        except:
+        except BaseException as e:
             self.ws.shutdown()
-            raise BaseException("WebSocket连接失败，请检查 {self.ws_url}")
+            raise BaseException(f"WebSocket连接失败，请检查 {self.ws_url}，错误信息: {str(e)}")
         try:
             res = json.loads(self.ws.recv())
             self.ws.shutdown()
-            return f"WebSocket连接成功，获取到{len(res['servers'])}个服务器"
+            alive_count = 0
+            MemTotal = 0
+            NetInSpeedTotal = 0
+            NetOutSpeedTotal = 0
+            now = pd.to_datetime(res['now'], unit='ms').value
+            for i in res['servers']:
+                if i['LastActive'] == "0001-01-01T00:00:00Z":
+                    continue
+                server_now = pd.to_datetime(i['LastActive'], format='%Y-%m-%dT%H:%M:%S.%f%z').value
+                if now - server_now < PermitTime:
+                    alive_count += 1
+                else:
+                    continue
+                MemTotal += i['Host']['MemTotal']
+                NetInSpeedTotal += i['State']['NetInSpeed']
+                NetOutSpeedTotal += i['State']['NetOutSpeed']
+            return  f"WebSocket连接成功！\n" \
+            f"获取到{len(res['servers'])}个服务器\n" \
+            f"总在线服务器{alive_count}个\n" \
+            f"总内存量{humanize.naturalsize(MemTotal, gnu=True)}\n" \
+            f"总上行速度{humanize.naturalsize(NetOutSpeedTotal, gnu=True)}/s 总下行速度{humanize.naturalsize(NetInSpeedTotal, gnu=True)}/s"
         except:
             self.ws.shutdown()
             raise BaseException("WebSocket返回数据无法解析")
