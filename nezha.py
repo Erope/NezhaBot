@@ -60,7 +60,7 @@ class NezhaDashboard:
     
     def checkws(self):
         try:
-            self.ws.connect(self.ws_url, timeout=10)
+            self.ws.connect(self.ws_url, timeout=10, header=["User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"])
         except BaseException as e:
             self.ws.shutdown()
             raise BaseException(f"WebSocket连接失败，请检查 {self.ws_url}，错误信息: {str(e)}")
