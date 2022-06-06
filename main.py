@@ -70,7 +70,7 @@ def nz(update: Update, context: CallbackContext) -> None:
             values = c.fetchall()
             conn.close()
             if len(values) == 0:
-                update.message.reply_text("您尚未添加自己的面板链接，请添加后或使用参数访问，如 /nz https://ops.naibahq.com/")
+                update.message.reply_text("您尚未添加自己的面板链接，请添加后(使用/seturl命令，建议私聊)或使用参数访问，如 /nz https://ops.naibahq.com/")
                 return
             elif len(values) >= 2:
                 update.message.reply_text("数据库错误，请联系管理员。")
