@@ -71,6 +71,8 @@ class NezhaDashboard:
             MemTotal = 0
             NetInSpeedTotal = 0
             NetOutSpeedTotal = 0
+            NetInTransferTotal = 0
+            NetOutTransferTotal = 0
             now = pd.to_datetime(res['now'], unit='ms').value
             for i in res['servers']:
                 if i['LastActive'] == "0001-01-01T00:00:00Z":
@@ -83,11 +85,19 @@ class NezhaDashboard:
                 MemTotal += i['Host']['MemTotal']
                 NetInSpeedTotal += i['State']['NetInSpeed']
                 NetOutSpeedTotal += i['State']['NetOutSpeed']
-            return  f"WebSocket连接成功！\n" \
+                NetInTransferTotal += i['State']['NetInTransfer']
+                NetOutTransferTotal += i['State']['NetOutTransfer']
+            msg = f"WebSocket连接成功！\n" \
             f"获取到{len(res['servers'])}个服务器\n" \
-            f"总在线服务器{alive_count}个\n" \
-            f"总内存量{humanize.naturalsize(MemTotal, gnu=True)}\n" \
-            f"总上行速度{humanize.naturalsize(NetOutSpeedTotal, gnu=True)}/s 总下行速度{humanize.naturalsize(NetInSpeedTotal, gnu=True)}/s"
+            f"总在线服务器\t{alive_count}个\n" \
+            f"总内存量\t{humanize.naturalsize(MemTotal, gnu=True)}\n" \
+            f"总上行速度\t{humanize.naturalsize(NetOutSpeedTotal, gnu=True)}/s\n" \
+            f"总下行速度\t{humanize.naturalsize(NetInSpeedTotal, gnu=True)}/s\n" \
+            f"总上行流量\t{humanize.naturalsize(NetOutTransferTotal, gnu=True)}\n" \
+            f"总下行流量\t{humanize.naturalsize(NetInTransferTotal, gnu=True)}"
+            if NetOutTransferTotal !=0 and NetInTransferTotal !=0:
+                msg += f"\n流量对等性\t{min(NetOutTransferTotal/NetInTransferTotal, NetInTransferTotal/NetOutTransferTotal)*100:.2f}%"
+            return msg
         except:
             self.ws.shutdown()
             raise BaseException("WebSocket返回数据无法解析")
