@@ -26,8 +26,15 @@ class NezhaDashboard:
         res += f"{self.checkws()}\n"
         res += "测试成功！"
         return res
-        
     
+    def show(self):
+        self.init()
+        self.checkpwd()
+        self.checkfooter()
+        res = f"面板版本为: {self.getversion()}\n"
+        res += f"{self.checkws()}"
+        return res
+        
     def init(self):
         try:
             html = self.s.get(self.url, timeout=10)
@@ -89,12 +96,12 @@ class NezhaDashboard:
                 NetOutTransferTotal += i['State']['NetOutTransfer']
             msg = f"WebSocket连接成功！\n" \
             f"获取到{len(res['servers'])}个服务器\n" \
-            f"总在线服务器\t{alive_count}个\n" \
-            f"总内存量\t{humanize.naturalsize(MemTotal, gnu=True)}\n" \
-            f"总上行速度\t{humanize.naturalsize(NetOutSpeedTotal, gnu=True)}/s\n" \
-            f"总下行速度\t{humanize.naturalsize(NetInSpeedTotal, gnu=True)}/s\n" \
-            f"总上行流量\t{humanize.naturalsize(NetOutTransferTotal, gnu=True)}\n" \
-            f"总下行流量\t{humanize.naturalsize(NetInTransferTotal, gnu=True)}"
+            f"总在线服务器{alive_count}个\n" \
+            f"总内存量    {humanize.naturalsize(MemTotal, gnu=True)}\n" \
+            f"总上行速度  {humanize.naturalsize(NetOutSpeedTotal, gnu=True)}/s\n" \
+            f"总下行速度  {humanize.naturalsize(NetInSpeedTotal, gnu=True)}/s\n" \
+            f"总上行流量  {humanize.naturalsize(NetOutTransferTotal, gnu=True)}\n" \
+            f"总下行流量  {humanize.naturalsize(NetInTransferTotal, gnu=True)}"
             if NetOutTransferTotal !=0 and NetInTransferTotal !=0:
                 msg += f"\n流量对等性\t{min(NetOutTransferTotal/NetInTransferTotal, NetInTransferTotal/NetOutTransferTotal)*100:.2f}%"
             return msg
@@ -105,4 +112,5 @@ class NezhaDashboard:
 if __name__ == '__main__':
     n = NezhaDashboard("https://ops.naibahq.com/", "wss://ops.naibahq.com/ws")
     print(n.collect())
+    print(n.show())
     
